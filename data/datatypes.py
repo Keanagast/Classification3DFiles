@@ -41,9 +41,41 @@ STRUCT_FORMAT_MAP = {
 
 # common attributes for binary file formats
 COMMON_ATTRIBUTES = {
+    # Byte order options
     "byte_order": ["little", "big"],
-    
 
+    # Vertex attributes (position, normals, etc.)
+    "vertex": {
+        "position": ["float32", "float64"],  # Common data types for position
+        "normal": ["float32", "float64"],    # Normal vectors
+        "texcoord": ["float32", "float64"],  # Texture coordinates (UVs)
+    },
+
+    # Color attributes
+    "color": {
+        "rgba": ["uint8"],  # 8-bit per channel color
+        "rgb": ["uint8"],   # 8-bit per channel without alpha
+        "float": ["float32"],  # Floating-point colors
+    },
+
+    # Face data attributes
+    "face": {
+        "indices": ["int32", "uint32"],  # Vertex indices for faces
+        "material_id": ["int16", "uint16"],  # Material IDs
+    },
+
+    # Additional attributes
+    "metadata": {
+        "name": ["string"],  # Name of the object
+        "id": ["uint32"],    # Object ID
+        "timestamp": ["uint64"],  # Time-related metadata
+    },
+    
+    # Animation attributes (if relevant for 3D files)
+    "animation": {
+        "joint_indices": ["int16", "uint16"],  # Bone indices
+        "weights": ["float32"],               # Skinning weights
+    },
 }
 
 
