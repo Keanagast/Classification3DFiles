@@ -35,7 +35,7 @@ STRUCT_FORMAT_MAP = {
     "float": "f",
     "double": "d",
     "char": "c",  # Single character
-    "string": None,  # Special handling for variable-length strings
+    "string": "Bs",  # Always includes the string length as an uint8 as prefix
     "bool": "?"
 }
 
@@ -62,6 +62,8 @@ COMMON_ATTRIBUTES = {
     "face": {
         "indices": ["int32", "uint32"],  # Vertex indices for faces
         "material_id": ["int16", "uint16"],  # Material IDs
+        "normal": ["int32", "uint32"],   # Face normals
+        "uv": ["int32", "uint32"],       # UV coordinates
     },
 
     # Additional attributes
@@ -76,6 +78,26 @@ COMMON_ATTRIBUTES = {
         "joint_indices": ["int16", "uint16"],  # Bone indices
         "weights": ["float32"],               # Skinning weights
     },
+}
+
+COMMON_ATTRIBUTES2 = {
+    # Byte order options
+    "byte_order": ["little", "big"],
+    # Vertex attributes (position, normals, etc.)
+    "vertex": ["float32", "float64"],  # Common data types for position
+    "normal": ["float32", "float64"],    # Normal vectors
+    "texcoord": ["float32", "float64"],  # Texture coordinates (UVs)
+    # Color attributes
+    "color": ["uint8"],  # 8-bit per channel color
+    # face data attributes
+    # can be sequential or separate (e.g. seperate: all faces then all face normals etc., sequential: face1, normal1, uv1, face2, normal2, uv2 etc.)
+    "face": ["int32", "uint32"],  # Vertex indices for faces
+    "material_id": ["int16", "uint16"],  # Material IDs (not suporrted right now)
+    "face_normal": ["int32", "uint32"],   # Face normals
+    "face_texcoord": ["int32", "uint32"],   # UV coordinates
+    # Additional attributes
+
+    # Animation attributes (if relevant for 3D files)
 }
 
 
@@ -95,15 +117,19 @@ def get_struct_format(data_type):
     raise ValueError(f"Invalid data type: {data_type}")
 
 # Packing for strings with length prefix
-def pack_string(data, length_type="uint16", encoding="utf-8"):
-    length_format = get_struct_format(length_type)
+# :param data: The string to pack.
+# :param length_format: The format string for the length prefix.
+# :param encoding: The encoding to use for the string. (endianess is based on the encoding)
+def pack_string(data, length_format="B", encoding="utf-8"):
     encoded = data.encode(encoding)
     return struct.pack(length_format, len(encoded)) + encoded
 
-# TODO: Reimplement after testing with strings
+
 # Unpacking for strings with length prefix
-def unpack_string(data, length_type="uint16", encoding="utf-8"):
-    length_format = get_struct_format(length_type)
-    length = struct.calcsize(length_format)
-    length = struct.unpack(length_format, data[:length])[0]
-    return data[length:].decode(encoding)
+# :param data: The binary data to unpack.
+# :param length_format: The format string for the length prefix.
+# :param encoding: The encoding to use for the string. (endianess is based on the encoding)
+def unpack_string(data, length_format="B", encoding="utf-8"):
+    prefix_length = struct.calcsize(length_format)
+    string_length = struct.unpack(length_format, data.read(prefix_length))[0]
+    return data.read(string_length).decode(encoding)
